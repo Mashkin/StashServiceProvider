@@ -11,6 +11,7 @@
 
 namespace Mashkin\Silex\Provider\StashServiceProvider;
 
+use Pimple;
 use Silex\Application;
 use Silex\ServiceProviderInterface;
 use Stash\Pool;
@@ -42,8 +43,14 @@ class StashServiceProvider implements ServiceProviderInterface
 				$tmp['default'] = $app['stash.options'];
 			}
 			
-			foreach ($tmp as $name => &$options) {
-				$options = array_replace($app['stash.default_options'], $options);
+			if ($tmp instanceof Pimple) {
+				$keys = $tmp->keys();
+			} else {
+				$keys = array_keys($tmp);
+			}
+			
+			foreach ($keys as $name) {
+				$tmp[$name] = array_replace($app['stash.default_options'], $tmp[$name]);
 				
 				if (!isset($app['stashes.driver.class'][$name])) {
 					$app['stashes.driver.class'][$name] = $app['stash.driver.default_class'];
@@ -60,7 +67,15 @@ class StashServiceProvider implements ServiceProviderInterface
 		$app['stashes.driver'] = $app->share(function ($app) {
 			$app['stashes.options_initializer']();
 			$drivers = new \Pimple();
-			foreach ($app['stashes.options'] as $name => $options) {
+			
+			if ($app['stashes.options'] instanceof Pimple) {
+				$keys = $app['stashes.options']->keys();
+			} else {
+				$keys = array_keys($app['stashes.options']);
+			}
+			
+			foreach ($keys as $name) {
+				$options = $app['stashes.options'][$name];
 				$drivers[$name] = $drivers->share(function ($drivers) use ($app, $name, $options) {
 					$class = sprintf('\\Stash\\Driver\\%s', $app['stashes.driver.class'][$name]);
 					$driver = new $class;
@@ -74,7 +89,15 @@ class StashServiceProvider implements ServiceProviderInterface
 		
 		$app['stashes'] = $app->share(function ($app) {
 			$stashes = new \Pimple();
-			foreach ($app['stashes.driver'] as $name => $driver) {
+			
+			if ($app['stashes.drivers'] instanceof Pimple) {
+				$keys = $app['stashes.drivers']->keys();
+			} else {
+				$keys = array_keys($app['stashes.drivers']);
+			}
+			
+			foreach ($keys as $name) {
+				$driver = $app['stashes.driver'][$name];
 				if ($app['stashes.default'] === $name) {
 					$driver = $app['stash.driver'];
 				}
