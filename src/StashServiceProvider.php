@@ -30,7 +30,7 @@ class StashServiceProvider implements ServiceProviderInterface
 		$app['stashes.options'] = $app->share(function () use ($app) {
 			$options = new \Pimple();
 			if (isset($app['stash.options'])) {
-				$options['default'] ) $app['stash.options'];
+				$options['default'] = $app['stash.options'];
 			}
 			$app['stashes.driver.class'] = array();
 			
