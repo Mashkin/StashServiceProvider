@@ -34,7 +34,7 @@ class StashServiceProvider implements ServiceProviderInterface
 			}
 			$app['stashes.driver.class'] = array();
 			
-			foreach ($tmp as $name => &$opts) {
+			foreach ($options as $name => &$opts) {
 				$opts = array_replace($app['stash.default_options'], $opts);
 				
 				if (!isset($app['stashes.driver.class'][$name])) {
@@ -45,6 +45,8 @@ class StashServiceProvider implements ServiceProviderInterface
 					$app['stashes.default'] = $name;
 				}
 			}
+			
+			return $options;
 		});
 		
 		$app['stashes.driver'] = $app->share(function ($app) {
