@@ -19,27 +19,28 @@ class StashServiceProvider implements ServiceProviderInterface
 {
 	public function register(Application $app)
 	{
-		if(!isset($app['stash.driver.class.default'])) {
+		if (!isset($app['stash.driver.default_class'])) {
 			$app['stash.driver.default_class'] = 'Ephemeral';
 		}
 		
-		if(!isset($app['stash.default_options'])) {
+		if (!isset($app['stash.default_options'])) {
 			$app['stash.default_options'] = array();
 		}
 		
 		$app['stashes.options.initializer'] = $app->protect(function () use ($app) {
 			static $initialized = false;
 			
-			if($initialized) {
+			if ($initialized) {
 				return;
 			}
 			
 			$initialized = true;
 			
-			if(!isset($app['stashes.options'])) {
-				$app['stashes.options'] = array(
-					'default' => isset($app['stash.options']) ? $app['stash.options'] : array()
-				);
+			if (!isset($app['stashes.options'])) {
+				$app['stashes.options'] = array();
+				if (isset($app['stash.options'])) {
+					$app['stashes.options']['default'] = $app['stash.options'];
+				}
 				$app['stashes.driver.class'] = array();
 			}
 				
@@ -47,11 +48,11 @@ class StashServiceProvider implements ServiceProviderInterface
 			foreach ($tmp as $name => &$options) {
 				$options = array_replace($app['stash.default_options'], $options);
 				
-				if(!isset($app['stashes.driver.class'][$name])) {
+				if (!isset($app['stashes.driver.class'][$name])) {
 					$app['stashes.driver.class'][$name] = $app['stash.driver.default_class'];
 				}
 				
-				if(!isset($app['stashes.default'])) {
+				if (!isset($app['stashes.default'])) {
 					$app['stashes.default'] = $name;
 				}
 			}
@@ -63,10 +64,8 @@ class StashServiceProvider implements ServiceProviderInterface
 			
 			$drivers = new \Pimple();
 			foreach ($app['stashes.options'] as $name => $options) {
-				$drivers[$name] = $app->share(function ($app) use ($name) {
+				$drivers[$name] = $drivers->share(function ($drivers) use ($app, $name, $options) {
 					$class = sprintf('\\Stash\\Driver\\%s', $app['stashes.driver.class'][$name]);
-					$options = $app['stashes.options'][$name];
-					
 					$driver = new $class;
 					$driver->setOptions($options);
 					return $driver;
@@ -79,7 +78,7 @@ class StashServiceProvider implements ServiceProviderInterface
 		$app['stashes'] = $app->share(function ($app) {
 			$stashes = new \Pimple();
 			foreach ($app['stashes.driver'] as $name => $driver) {
-				if($app['stashes.default'] === $name) {
+				if ($app['stashes.default'] === $name) {
 					$driver = $app['stash.driver'];
 				}
 				
@@ -91,17 +90,15 @@ class StashServiceProvider implements ServiceProviderInterface
 			return $stashes;
 		});
 		
-		$app['stash'] = $app->share(function ($app) {
-			$stashes = $app['stashes'];
-			
-			return $stashes[$app['stashes.default']];
-		});
+		$app['stash.driver'] = function ($app) {
+			$drivers = $app['stashes.driver'];
+			return $drivers[$app['stashes.default']];
+		};
 		
-		$app['stash.driver'] = $app->share(function ($app) {
-			$stashes = $app['stashes.driver'];
-			
+		$app['stash'] = function ($app) {
+			$stashes = $app['stashes'];
 			return $stashes[$app['stashes.default']];
-		});
+		};
 	}
     
 	public function boot(Application $app)
