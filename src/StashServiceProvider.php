@@ -90,10 +90,10 @@ class StashServiceProvider implements ServiceProviderInterface
 		$app['stashes'] = $app->share(function ($app) {
 			$stashes = new \Pimple();
 			
-			if ($app['stashes.drivers'] instanceof Pimple) {
-				$keys = $app['stashes.drivers']->keys();
+			if ($app['stashes.driver'] instanceof Pimple) {
+				$keys = $app['stashes.driver']->keys();
 			} else {
-				$keys = array_keys($app['stashes.drivers']);
+				$keys = array_keys($app['stashes.driver']);
 			}
 			
 			foreach ($keys as $name) {
