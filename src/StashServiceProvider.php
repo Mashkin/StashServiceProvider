@@ -28,16 +28,20 @@ class StashServiceProvider implements ServiceProviderInterface
 		}
 		
 		$app['stashes.options_initializer'] = $app->protect(function () use ($app) {
+			if (!isset($app['stashes.driver.class'])) {
+				$app['stashes.driver.class'] = array();
+			}
+			
 			if (!isset($app['stashes.options'])) {
 				$app['stashes.options'] = array();
 			}
-			if (isset($app['stash.options'])) {
-				$app['stashes.options']['default'] = $app['stash.options'];
-			}
-			
-			$app['stashes.driver.class'] = array();
 			
 			$tmp = $app['stashes.options'];
+			
+			if (isset($app['stash.options'])) {
+				$tmp['default'] = $app['stash.options'];
+			}
+			
 			foreach ($tmp as $name => &$options) {
 				$options = array_replace($app['stash.default_options'], $options);
 				
@@ -49,6 +53,7 @@ class StashServiceProvider implements ServiceProviderInterface
 					$app['stashes.default'] = $name;
 				}
 			}
+			
 			$app['stashes.options'] = $tmp;
 		});
 		
