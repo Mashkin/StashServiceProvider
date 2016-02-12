@@ -78,8 +78,7 @@ class StashServiceProvider implements ServiceProviderInterface
 				$options = $app['stashes.options'][$name];
 				$drivers[$name] = $drivers->share(function ($drivers) use ($app, $name, $options) {
 					$class = sprintf('\\Stash\\Driver\\%s', $app['stashes.driver.class'][$name]);
-					$driver = new $class;
-					$driver->setOptions($options);
+					$driver = new $class($options);
 					return $driver;
 				});
 			}
