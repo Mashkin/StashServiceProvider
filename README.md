@@ -12,7 +12,7 @@ $app->register(new StashServiceProvider());
 $app['stashes.options'] = array();
 $app['stashes.driver.class'] = array();
 
-if(function_exists('apc_fetch')) {
+if(Stash\Driver\Apc::isAvailable()) {
     $app['stashes.driver.class']['default'] = 'Apc';
 	$app['stashes.options']['default'] = array(
 		'ttl' => 24*60*60,
